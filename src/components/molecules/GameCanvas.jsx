@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Ball from "@/components/atoms/Ball";
-import { motion, AnimatePresence } from "framer-motion";
 
 const GameCanvas = ({ 
   level, 
@@ -23,14 +23,16 @@ const GameCanvas = ({
   const GROUND_Y = dimensions.height - 100;
 
   // Initialize ball position
-  const [ballState, setBallState] = useState({
+const [ballState, setBallState] = useState({
     x: 50,
     y: GROUND_Y - BALL_SIZE,
     velocityX: 2,
     velocityY: 0,
     isGrounded: false,
-isJumping: false,
+    isJumping: false,
     lastGroundTime: Date.now(),
+    isReversed: false,
+    baseSpeed: 2,
   });
   const [particles, setParticles] = useState([]);
   const [sleepActive, setSleepActive] = useState(false);
@@ -70,9 +72,9 @@ isJumping: false,
     }, 200);
   }, [ballState.isGrounded, sleepActive, onJump]);
 
-  // Handle sleep input
+// Handle sleep input
   const handleSleep = useCallback(() => {
-if (gameState.sleepUsed || sleepActive || gameState.status !== "playing") return;
+    if (gameState.sleepUsed || sleepActive || gameState.status !== "playing") return;
 
     setSleepActive(true);
     onSleepUsed?.();
@@ -94,13 +96,37 @@ if (gameState.sleepUsed || sleepActive || gameState.status !== "playing") return
     }, 2000);
   }, [gameState.sleepUsed, sleepActive, onSleepUsed, gameState.status, ballState.x, ballState.y]);
 
-  // Set up controls
+  // Handle reverse input
+  const handleReverse = useCallback(() => {
+    if (sleepActive || gameState.status !== "playing") return;
+    
+    setBallState(prev => ({
+      ...prev,
+      isReversed: !prev.isReversed,
+      velocityX: prev.isReversed ? prev.baseSpeed : -prev.baseSpeed,
+    }));
+
+    // Create reverse particles
+    const reverseParticles = Array.from({ length: 6 }, (_, i) => ({
+      id: Date.now() + i,
+      x: ballState.x + BALL_SIZE/2 + Math.random() * 20 - 10,
+      y: ballState.y + BALL_SIZE/2 + Math.random() * 20 - 10,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      life: 1,
+      color: '#60A5FA'
+    }));
+    setParticles(prev => [...prev, ...reverseParticles]);
+  }, [sleepActive, gameState.status, ballState.x, ballState.y]);
+
+// Set up controls
   useEffect(() => {
     if (controls) {
       controls.jump = handleJump;
       controls.sleep = handleSleep;
+      controls.reverse = handleReverse;
     }
-  }, [controls, handleJump, handleSleep]);
+  }, [controls, handleJump, handleSleep, handleReverse]);
 
   // Collision detection
 const checkCollisions = useCallback((newX, newY, currentVelocityY = 0) => {
@@ -178,13 +204,30 @@ setBallState(prev => {
             // Apply gravity
             newVelocityY += GRAVITY;
             
+            // Update horizontal velocity based on reverse state
+            newVelocityX = prev.isReversed ? -prev.baseSpeed : prev.baseSpeed;
+            
             // Update position
             newX += newVelocityX;
             newY += newVelocityY;
 
-            // Check boundaries
-            if (newX < 0) newX = 0;
-            if (newX > dimensions.width - BALL_SIZE) newX = dimensions.width - BALL_SIZE;
+            // Check boundaries - reverse direction when hitting walls
+            if (newX < 0) {
+              newX = 0;
+              setBallState(current => ({
+                ...current,
+                isReversed: false,
+                velocityX: current.baseSpeed
+              }));
+            }
+            if (newX > dimensions.width - BALL_SIZE) {
+              newX = dimensions.width - BALL_SIZE;
+              setBallState(current => ({
+                ...current,
+                isReversed: true,
+                velocityX: -current.baseSpeed
+              }));
+            }
 
             // Check collisions with current velocity
             const collision = checkCollisions(newX, newY, newVelocityY);
@@ -244,7 +287,8 @@ setBallState(prev => {
 }, [gameState.status, dimensions, sleepActive, onLevelComplete, onGameOver]);
 
 // Reset ball position when level changes or game restarts
-  useEffect(() => {
+// Reset ball position when level changes or game restarts
+useEffect(() => {
     setBallState({
       x: 50,
       y: GROUND_Y - BALL_SIZE,
@@ -253,10 +297,12 @@ setBallState(prev => {
       isGrounded: true,
       isJumping: false,
       lastGroundTime: Date.now(),
+      isReversed: false,
+      baseSpeed: 2.5,
     });
     setSleepActive(false);
     setParticles([]);
-  }, [level?.id, gameState.status]);
+  }, [level, gameState.status, GROUND_Y, BALL_SIZE]);
 
   // Ball boundary detection - trigger game over if ball goes off screen
   useEffect(() => {
@@ -349,11 +395,12 @@ setBallState(prev => {
         />
       )}
 
-      {/* Ball */}
+{/* Ball */}
       <Ball
         position={{ x: ballState.x, y: ballState.y }}
         isSleeping={sleepActive}
         isJumping={ballState.isJumping}
+        isReversed={ballState.isReversed}
         size={BALL_SIZE}
       />
 {/* Particle System */}

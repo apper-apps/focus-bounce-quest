@@ -64,7 +64,7 @@ useEffect(() => {
   }, [gameState.status, startTime]);
 
   // Input handling
-  useEffect(() => {
+useEffect(() => {
     const handleKeyPress = (e) => {
       if (gameState.status !== "playing") return;
       
@@ -74,6 +74,12 @@ useEffect(() => {
       } else if (e.key === "s" || e.key === "S") {
         e.preventDefault();
         controlsRef.current.sleep?.();
+      } else if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        controlsRef.current.reverse?.();
+        toast.info("🔄 Ball direction reversed!", {
+          icon: "🔄"
+        });
       } else if (e.key === "Escape") {
         handlePause();
       }

@@ -5,6 +5,7 @@ const Ball = ({
   position, 
   isSleeping = false, 
   isJumping = false, 
+  isReversed = false,
   size = 24,
   className = "" 
 }) => {
@@ -12,8 +13,8 @@ const Ball = ({
   const eyeOffset = size * 0.15;
 
   return (
-    <motion.div
-      className={`ball absolute ${className} ${isSleeping ? "sleep-effect" : ""}`}
+<motion.div
+      className={`ball absolute ${className} ${isSleeping ? "sleep-effect" : ""} ${isReversed ? "reverse-effect" : ""}`}
       style={{
         width: size,
         height: size,
@@ -22,9 +23,13 @@ const Ball = ({
       }}
       animate={{
         scaleY: isJumping ? 0.8 : 1,
-        scaleX: isJumping ? 1.2 : 1,
+        scaleX: isJumping ? 1.2 : (isReversed ? -1 : 1),
+        rotateY: isReversed ? 180 : 0,
       }}
-      transition={{ duration: 0.2 }}
+      transition={{ 
+        duration: 0.2,
+        rotateY: { duration: 0.3, ease: "easeInOut" }
+      }}
     >
       {/* Eyes */}
       <div className="absolute inset-0 flex items-center justify-center">

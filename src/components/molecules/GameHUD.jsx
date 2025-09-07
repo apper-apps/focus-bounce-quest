@@ -78,14 +78,18 @@ const GameHUD = ({
           </div>
           
           {/* Help Text */}
-          <div className="bg-black/40 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/20 text-xs text-slate-300 max-w-48">
+<div className="bg-black/40 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/20 text-xs text-slate-300 max-w-56">
             <div className="flex items-center gap-2 mb-1">
               <ApperIcon name="MousePointer" size={12} />
               <span>Click/SPACE to jump</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-1">
               <ApperIcon name="Moon" size={12} />
               <span>S for sleep ability</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ApperIcon name="RotateCcw" size={12} />
+              <span>R to reverse direction</span>
             </div>
           </div>
         </div>
