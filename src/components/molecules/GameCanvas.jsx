@@ -323,10 +323,12 @@ useEffect(() => {
       ref={canvasRef}
       className="relative w-full h-full overflow-hidden bg-gradient-to-b from-blue-900 via-purple-900 to-indigo-900"
       style={{
-        background: `linear-gradient(135deg, 
-          ${level.backgroundTheme === "forest" ? "#2D5016, #1A2E05" : 
+background: `linear-gradient(135deg, 
+          ${level.backgroundTheme === "nature" ? "#FF8A65, #FFA726, #66BB6A, #2E7D32" :
+            level.backgroundTheme === "forest" ? "#2D5016, #1A2E05" : 
             level.backgroundTheme === "lava" ? "#7C2D12, #431407" :
             level.backgroundTheme === "cyber" ? "#1E1B4B, #0F0A1F" :
+            level.backgroundTheme === "galactic" ? "#1A237E, #0D47A1" :
             "#1E3A8A, #312E81"})`,
       }}
     >

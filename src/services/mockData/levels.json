@@ -1,6 +1,6 @@
 [
   {
-    "Id": 1,
+"Id": 1,
     "name": "First Steps",
     "platforms": [
       {"x": 200, "y": 450, "width": 100, "height": 20, "type": "platform"},
@@ -10,7 +10,7 @@
     "enemies": [],
     "portal": {"x": 500, "y": 360},
     "parTime": 15,
-    "backgroundTheme": "sky"
+    "backgroundTheme": "nature"
   },
   {
     "Id": 2,
@@ -415,7 +415,7 @@
     "backgroundTheme": "galactic"
   },
   {
-    "Id": 20,
+"Id": 20,
     "name": "The Final Odyssey",
     "platforms": [
       {"x": 100, "y": 440, "width": 60, "height": 15, "type": "platform"},
@@ -443,6 +443,6 @@
     "enemies": [],
     "portal": {"x": 950, "y": 130},
     "parTime": 65,
-    "backgroundTheme": "galactic"
+    "backgroundTheme": "nature"
   }
 ]
