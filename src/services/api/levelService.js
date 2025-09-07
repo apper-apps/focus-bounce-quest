@@ -5,10 +5,9 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const levelService = {
   async getAll() {
-    await delay(300);
-    return [...levelsData];
+    await delay(200);
+    return [...levelsData].reverse();
   },
-
   async getById(id) {
     await delay(200);
     const level = levelsData.find(level => level.Id === id);

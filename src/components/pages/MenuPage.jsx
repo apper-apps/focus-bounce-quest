@@ -152,15 +152,15 @@ const MenuPage = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1, duration: 0.6 }}
-          className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+className="flex flex-col sm:flex-row gap-6 justify-center items-center"
         >
-<Button
-            onClick={() => navigate("/game/1")}
+          <Button
+            onClick={() => navigate("/game/20")}
             size="large"
             className="flex items-center gap-3 transform hover:scale-105 transition-all duration-300"
           >
             <ApperIcon name="Play" size={24} />
-            Start Adventure
+            Start Reverse Challenge
           </Button>
 
           <Button

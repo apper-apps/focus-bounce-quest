@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Button from "@/components/atoms/Button";
-import LevelCard from "@/components/molecules/LevelCard";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
-import ApperIcon from "@/components/ApperIcon";
 import { levelService } from "@/services/api/levelService";
 import { progressService } from "@/services/api/progressService";
+import ApperIcon from "@/components/ApperIcon";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
+import LevelCard from "@/components/molecules/LevelCard";
+import Button from "@/components/atoms/Button";
 
 const LevelSelectPage = () => {
   const navigate = useNavigate();
@@ -41,12 +41,12 @@ const LevelSelectPage = () => {
 
   const getProgressForLevel = (levelId) => {
     return progress.find(p => p.levelId === levelId);
-  };
+};
 
   const isLevelUnlocked = (levelId) => {
-    if (levelId === 1) return true;
-    const prevProgress = getProgressForLevel(levelId - 1);
-    return prevProgress?.stars > 0;
+    if (levelId === 20) return true;
+    const nextProgress = getProgressForLevel(levelId + 1);
+    return nextProgress?.stars > 0;
   };
 
   const handleLevelClick = (levelId) => {
@@ -85,14 +85,13 @@ const LevelSelectPage = () => {
             <ApperIcon name="ArrowLeft" size={20} />
             Back to Menu
           </Button>
-
-          <div className="text-center">
+<div className="text-center mb-8">
+            <motion.div className="inline-block mb-4">
             <h1 className="font-display text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Level Select
+              Reverse Challenge
             </h1>
-            <p className="text-slate-400 mt-2">
-              Stars: {totalStars} / {maxStars}
-            </p>
+            </motion.div>
+            <p className="text-slate-400 text-lg">Start from the hardest - work your way down!</p>
           </div>
 
           <div className="w-24" /> {/* Spacer for balance */}
@@ -114,8 +113,7 @@ const LevelSelectPage = () => {
           </div>
         </div>
 
-        {/* Level Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+<div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {levels.map((level, index) => (
             <motion.div
               key={level.Id}
@@ -137,7 +135,6 @@ const LevelSelectPage = () => {
             </motion.div>
           ))}
         </div>
-
         {/* Tips */}
         <motion.div
           className="mt-16 bg-black/20 backdrop-blur-sm rounded-xl p-6 border border-white/10"

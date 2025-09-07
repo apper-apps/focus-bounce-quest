@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "react-toastify";
-import GameCanvas from "@/components/molecules/GameCanvas";
-import GameHUD from "@/components/molecules/GameHUD";
-import Button from "@/components/atoms/Button";
-import Star from "@/components/atoms/Star";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
-import ApperIcon from "@/components/ApperIcon";
 import { levelService } from "@/services/api/levelService";
 import { progressService } from "@/services/api/progressService";
+import ApperIcon from "@/components/ApperIcon";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
+import GameCanvas from "@/components/molecules/GameCanvas";
+import GameHUD from "@/components/molecules/GameHUD";
+import Star from "@/components/atoms/Star";
+import Button from "@/components/atoms/Button";
 
 const GamePage = () => {
   const navigate = useNavigate();
@@ -34,15 +34,16 @@ const [gameState, setGameState] = useState({
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(null); // pause, complete, failed
 
-  // Load level data
+// Load level data
   const loadLevel = async () => {
     try {
       setLoading(true);
-      setError(null);
       const levelData = await levelService.getById(parseInt(levelId));
       setLevel(levelData);
+      setError(null);
     } catch (err) {
-      setError(err.message);
+      console.error('Failed to load level:', err);
+      setError(err.message || 'Failed to load level');
     } finally {
       setLoading(false);
     }
@@ -143,8 +144,8 @@ const handleSleep = () => {
     toast.success(`🎉 Level Complete! ${stars} stars earned!`);
   };
 
-  const handleGameOver = () => {
-setGameState(prev => ({ 
+const handleGameOver = () => {
+    setGameState(prev => ({ 
       ...prev, 
       status: "failed", 
       deaths: prev.deaths + 1 
@@ -154,7 +155,6 @@ setGameState(prev => ({
     });
     setModalType("failed");
     setShowModal(true);
-    toast.error("💥 Game Over! Try again!");
   };
 
   const calculateStars = (time) => {
@@ -178,20 +178,7 @@ const handleRestart = () => {
     // Game canvas will reset automatically
   };
 const handleNextLevel = () => {
-    // Close modal first
-    setShowModal(false);
-    
-    // Reset game state for next level
-    setGameState({
-      status: "playing",
-      sleepUsed: false,
-      deaths: 0,
-      score: 0,
-      perfectJumps: 0,
-      timeBonus: 0,
-    });
-    
-    // Navigate to next level
+    if (!level) return;
     const nextLevel = parseInt(levelId) + 1;
     if (nextLevel <= 20) {
       navigate(`/game/${nextLevel}`);

@@ -23,11 +23,13 @@ const GameHUD = ({
 <div className="absolute top-0 left-0 right-0 z-10 p-4">
       <div className="flex justify-between items-start">
         {/* Left Side - Level & Stats */}
-        <div className="flex flex-col gap-2">
-          <div className="bg-black/40 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
+<div className="flex flex-col items-start gap-2">
+          <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
+            <ApperIcon name="Target" size={16} className="text-primary" />
             <span className="text-white font-display text-lg">LEVEL {level}</span>
           </div>
-          {(deaths > 0 || score > 0) && (
+          
+          {(score > 0 || deaths > 0) && (
             <div className="bg-black/40 backdrop-blur-sm rounded-xl px-3 py-1 border border-white/20 text-sm">
               {score > 0 && <span className="text-yellow-400">Score: {score}</span>}
               {deaths > 0 && score > 0 && <span className="text-white mx-2">•</span>}
