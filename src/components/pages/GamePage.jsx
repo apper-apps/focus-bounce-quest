@@ -18,10 +18,9 @@ const GamePage = () => {
   const [level, setLevel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const controlsRef = useRef({});
-  const [startTime] = useState(Date.now());
+const controlsRef = useRef({});
+  const [startTime, setStartTime] = useState(Date.now());
   const [timer, setTimer] = useState(0);
-
 const [gameState, setGameState] = useState({
     status: "playing", // playing, paused, completed, failed
     sleepUsed: false,
@@ -54,8 +53,8 @@ const [gameState, setGameState] = useState({
   }, [levelId]);
 
   // Game timer
-  useEffect(() => {
-let interval;
+useEffect(() => {
+    let interval;
     if (gameState.status === "playing" && startTime) {
       interval = setInterval(() => {
         setTimer(Math.floor((Date.now() - startTime) / 1000));
@@ -166,6 +165,9 @@ const handleGameOver = () => {
   };
 
 const handleRestart = () => {
+    const newStartTime = Date.now();
+    setStartTime(newStartTime);
+    setTimer(0);
     setGameState({
       status: "playing",
       sleepUsed: false,
@@ -175,7 +177,7 @@ const handleRestart = () => {
       timeBonus: 0,
     });
     setShowModal(false);
-    // Game canvas will reset automatically
+    // Game canvas will reset automatically with new game state
   };
 const handleNextLevel = () => {
     if (!level) return;
@@ -229,7 +231,7 @@ const handleNextLevel = () => {
         onSleep={handleSleep}
       />
 
-      {/* Game Canvas */}
+{/* Game Canvas */}
       <GameCanvas
         level={level}
         gameState={gameState}
@@ -239,6 +241,7 @@ const handleNextLevel = () => {
         onJump={handleJump}
         onScore={(points) => setGameState(prev => ({ ...prev, score: prev.score + points }))}
         controls={controlsRef.current}
+        key={`${level?.id}-${startTime}`}
       />
 
       {/* Mobile Controls */}
@@ -344,15 +347,19 @@ const handleNextLevel = () => {
               )}
 
               {modalType === "failed" && (
-                <>
+<>
                   <div className="mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-accent to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <ApperIcon name="RotateCcw" size={32} className="text-white" />
+                    <div className="w-20 h-20 bg-gradient-to-br from-red-500 via-accent to-red-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl">
+                      <ApperIcon name="RotateCcw" size={36} className="text-white drop-shadow-lg" />
                     </div>
                   </div>
 
-                  <h2 className="text-2xl font-display font-bold mb-4">Try Again</h2>
-                  <p className="text-slate-300 mb-6">Don't give up! Every great adventurer faces challenges.</p>
+<h2 className="text-3xl font-display font-bold mb-4 bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Game Over</h2>
+                  <p className="text-slate-300 mb-2">The ball missed the target!</p>
+                  <div className="text-sm text-slate-400 mb-6">
+                    {gameState.deaths > 0 && <span>Deaths: {gameState.deaths} • </span>}
+                    <span>Time: {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}</span>
+                  </div>
 
                   <div className="space-y-4">
                     <Button onClick={handleRestart} className="w-full">

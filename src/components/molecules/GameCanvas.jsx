@@ -9,6 +9,7 @@ const GameCanvas = ({
   onGameOver, 
   onSleepUsed,
   onJump,
+  onScore,
   controls 
 }) => {
   const canvasRef = useRef(null);
@@ -240,7 +241,7 @@ break;
     };
   }, [gameState.status, dimensions, checkCollisions, sleepActive, onLevelComplete, onGameOver]);
 
-// Reset ball position when level changes
+// Reset ball position when level changes or game restarts
   useEffect(() => {
     setBallState({
       x: 50,
@@ -253,7 +254,19 @@ break;
     });
     setSleepActive(false);
     setParticles([]);
-  }, [level?.id]);
+  }, [level?.id, gameState.status]);
+
+  // Ball boundary detection - trigger game over if ball goes off screen
+  useEffect(() => {
+    if (gameState.status === "playing") {
+      // Check if ball fell off the screen or went too far right
+      if (ballState.y > dimensions.height + 100 || 
+          ballState.x > dimensions.width + 100 || 
+          ballState.x < -100) {
+        onGameOver();
+      }
+    }
+  }, [ballState.x, ballState.y, gameState.status, dimensions, onGameOver]);
 
   if (!level) return null;
 
