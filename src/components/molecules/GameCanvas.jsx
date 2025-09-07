@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from 'framer-motion'
+import { getEnemyStyle, getEnemyIcon } from '@/utils/enemyHelpers'
 import Ball from "@/components/atoms/Ball";
 
 const GameCanvas = ({ 
@@ -10,8 +11,16 @@ const GameCanvas = ({
   onSleepUsed,
   onJump,
   onScore,
-  controls 
+controls 
 }) => {
+  // Combat state
+  const [combatState, setCombatState] = useState({
+    active: false,
+    enemy: null,
+    playerHealth: 100,
+    enemyHealth: 100,
+    playerTurn: true
+  });
   const canvasRef = useRef(null);
   const gameLoopRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -132,6 +141,24 @@ const [ballState, setBallState] = useState({
 const checkCollisions = useCallback((newX, newY, currentVelocityY = 0) => {
     if (!level?.platforms) return { collision: false, type: null };
 
+    // Check enemy collisions first
+    if (level?.enemies && !combatState.active) {
+      for (const enemy of level.enemies) {
+        if (newX < enemy.x + enemy.width &&
+            newX + BALL_SIZE > enemy.x &&
+            newY < enemy.y + enemy.height &&
+            newY + BALL_SIZE > enemy.y) {
+          return { 
+            collision: true, 
+            type: "enemy", 
+            enemy: enemy,
+            x: enemy.x,
+            y: enemy.y - BALL_SIZE
+          };
+        }
+      }
+    }
+
     // Check ground collision
     if (newY >= GROUND_Y - BALL_SIZE) {
       return { collision: true, type: "ground", y: GROUND_Y - BALL_SIZE };
@@ -183,12 +210,12 @@ const checkCollisions = useCallback((newX, newY, currentVelocityY = 0) => {
       }
     }
 
-    return { collision: false, type: null };
-  }, [level, sleepActive]);
+return { collision: false, type: null };
+  }, [level, sleepActive, combatState.active]);
 
-  // Game loop
+// Game loop
   useEffect(() => {
-    if (gameState.status !== "playing") return;
+    if (gameState.status !== "playing" || combatState.active) return;
 
     gameLoopRef.current = setInterval(() => {
 setBallState(prev => {
@@ -250,6 +277,22 @@ setBallState(prev => {
                 setParticles(prevParticles => [...prevParticles, ...explosionParticles]);
                 onGameOver?.();
                 return prev;
+              case "enemy":
+                // Start combat
+                setCombatState({
+                  active: true,
+                  enemy: collision.enemy,
+                  playerHealth: 100,
+                  enemyHealth: collision.enemy.health || 100,
+                  playerTurn: true
+                });
+                // Position ball near enemy
+                newX = collision.x;
+                newY = collision.y;
+                newVelocityX = 0;
+                newVelocityY = 0;
+                newIsGrounded = true;
+                break;
               case "portal":
                 onLevelComplete?.();
                 return prev;
@@ -281,7 +324,54 @@ return {
         clearInterval(gameLoopRef.current);
       }
     };
-}, [gameState.status, dimensions, sleepActive, onLevelComplete, onGameOver]);
+  }, [gameState.status, dimensions, sleepActive, onLevelComplete, onGameOver, combatState.active]);
+
+  // Combat controls
+  controls.attack = useCallback(() => {
+    if (combatState.active && combatState.playerTurn) {
+      const damage = Math.floor(Math.random() * 30) + 20; // 20-50 damage
+      setCombatState(prev => ({
+        ...prev,
+        enemyHealth: Math.max(0, prev.enemyHealth - damage),
+        playerTurn: false
+      }));
+    }
+  }, [combatState.active, combatState.playerTurn]);
+
+  // Enemy turn and combat resolution
+  useEffect(() => {
+    if (!combatState.active) return;
+
+    if (combatState.enemyHealth <= 0) {
+      // Victory - remove enemy and continue
+      const updatedLevel = {
+        ...level,
+        enemies: level.enemies.filter(e => e !== combatState.enemy)
+      };
+      onScore?.(50); // Bonus points for defeating enemy
+      setCombatState({ active: false, enemy: null, playerHealth: 100, enemyHealth: 100, playerTurn: true });
+      return;
+    }
+
+    if (combatState.playerHealth <= 0) {
+      // Defeat - game over
+      onGameOver?.();
+      setCombatState({ active: false, enemy: null, playerHealth: 100, enemyHealth: 100, playerTurn: true });
+      return;
+    }
+
+    if (!combatState.playerTurn) {
+      // Enemy turn
+      setTimeout(() => {
+        const damage = Math.floor(Math.random() * 25) + 15; // 15-40 damage
+        setCombatState(prev => ({
+          ...prev,
+          playerHealth: Math.max(0, prev.playerHealth - damage),
+          playerTurn: true
+        }));
+      }, 1000);
+    }
+  }, [combatState, level, onScore, onGameOver]);
 
 // Reset ball position when level changes or game restarts
 // Reset ball position when level changes or game restarts
@@ -371,8 +461,99 @@ background: `linear-gradient(135deg,
             height: platform.height,
           }}
         />
+))}
+
+      {/* Enemies */}
+      {level?.enemies?.map((enemy, index) => (
+        <motion.div
+          key={`enemy-${index}`}
+          className={`absolute ${getEnemyStyle(enemy.type)}`}
+          style={{
+            left: enemy.x,
+            top: enemy.y,
+            width: enemy.width,
+            height: enemy.height,
+          }}
+          animate={{
+            y: [0, -3, 0],
+            scaleX: [1, 1.02, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
+            {getEnemyIcon(enemy.type)}
+          </div>
+        </motion.div>
       ))}
 
+      {/* Combat UI Overlay */}
+      <AnimatePresence>
+        {combatState.active && (
+          <motion.div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-gradient-to-br from-surface to-slate-700 rounded-xl p-6 max-w-md w-full mx-4 border border-white/20 text-white"
+              initial={{ scale: 0.8, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 20 }}
+            >
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold mb-2">Trap Encounter!</h3>
+                <p className="text-slate-300">{combatState.enemy?.name || 'Unknown Enemy'}</p>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Your Health:</span>
+                  <div className="flex-1 mx-3 bg-gray-600 rounded-full h-3 relative overflow-hidden">
+                    <motion.div
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${combatState.playerHealth}%` }}
+                      animate={{ width: `${combatState.playerHealth}%` }}
+                    />
+                  </div>
+                  <span>{combatState.playerHealth}/100</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Enemy Health:</span>
+                  <div className="flex-1 mx-3 bg-gray-600 rounded-full h-3 relative overflow-hidden">
+                    <motion.div
+                      className="h-full bg-red-500 rounded-full"
+                      style={{ width: `${combatState.enemyHealth}%` }}
+                      animate={{ width: `${combatState.enemyHealth}%` }}
+                    />
+                  </div>
+                  <span>{combatState.enemyHealth}/100</span>
+                </div>
+              </div>
+
+              <div className="text-center">
+                {combatState.playerTurn ? (
+                  <motion.button
+                    onClick={() => controls.attack?.()}
+                    className="bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 px-8 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-200"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    ⚔️ Attack!
+                  </motion.button>
+                ) : (
+                  <div className="text-slate-300">Enemy is attacking...</div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Portal */}
       {level.portal && (
         <motion.div

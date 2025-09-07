@@ -10,8 +10,9 @@ const GameHUD = ({
   onPause, 
   onSleep, 
   sleepUsed,
-  deaths = 0,
+deaths = 0,
   score = 0,
+  enemiesDefeated = 0,
   ballReversed = false
 }) => {
   const formatTime = (seconds) => {
@@ -35,6 +36,14 @@ const GameHUD = ({
               {score > 0 && <span className="text-yellow-400">Score: {score}</span>}
               {deaths > 0 && score > 0 && <span className="text-white mx-2">•</span>}
               {deaths > 0 && <span className="text-red-400">Deaths: {deaths}</span>}
+</div>
+          )}
+          
+          {/* Enemies Defeated Counter */}
+          {enemiesDefeated > 0 && (
+            <div className="flex items-center gap-2 bg-red-600/20 backdrop-blur-sm px-3 py-1 rounded-full border border-red-400/30">
+              <span className="text-red-300 text-lg">⚔️</span>
+              <span className="text-white font-medium">{enemiesDefeated}</span>
             </div>
           )}
         </div>

@@ -22,12 +22,13 @@ const controlsRef = useRef({});
   const [startTime, setStartTime] = useState(Date.now());
   const [timer, setTimer] = useState(0);
 const [gameState, setGameState] = useState({
-    status: "playing", // playing, paused, completed, failed
+status: "playing", // playing, paused, completed, failed
     sleepUsed: false,
     deaths: 0,
     score: 0,
     perfectJumps: 0,
     timeBonus: 0,
+    enemiesDefeated: 0,
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -160,8 +161,12 @@ const handleGameOver = () => {
     });
     setModalType("failed");
     setShowModal(true);
-  };
+};
 
+  const handleCombatAction = (action) => {
+    // Combat actions are handled in GameCanvas
+    controlsRef.current.attack?.();
+  };
   const calculateStars = (time) => {
     if (!level?.parTime) return 1;
     
@@ -181,6 +186,7 @@ const handleRestart = () => {
       score: 0,
       perfectJumps: 0,
       timeBonus: 0,
+      enemiesDefeated: 0,
     });
     setShowModal(false);
     // Game canvas will reset automatically with new game state
@@ -245,10 +251,11 @@ level={level}
         onGameOver={handleGameOver}
         onSleepUsed={() => setGameState(prev => ({ ...prev, sleepUsed: true }))}
         onJump={handleJump}
-        onScore={(points, ballReversed) => {
+        onScore={(points, ballReversed, enemyDefeated = false) => {
           setGameState(prev => ({ 
             ...prev, 
             score: prev.score + points,
+            enemiesDefeated: enemyDefeated ? prev.enemiesDefeated + 1 : prev.enemiesDefeated,
             ballReversed: ballReversed !== undefined ? ballReversed : prev.ballReversed
           }));
         }}
@@ -257,7 +264,7 @@ level={level}
       />
 
       {/* Mobile Controls */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 md:hidden">
+<div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 md:hidden">
         <motion.button
           onTouchStart={(e) => {
             e.preventDefault();
@@ -276,6 +283,27 @@ level={level}
             name="Moon" 
             size={24} 
             className={gameState.sleepUsed ? "text-gray-400" : "text-white"} 
+          />
+        </motion.button>
+        
+        <motion.button
+          onTouchStart={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleCombatAction('attack');
+          }}
+          disabled={gameState.status !== "playing"}
+          className={`w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+            gameState.status !== "playing"
+              ? "bg-gray-600/50 border-gray-500 cursor-not-allowed"
+              : "bg-red-600/70 border-red-400 active:scale-95"
+          }`}
+          whileTap={{ scale: 0.9 }}
+        >
+          <ApperIcon 
+            name="Sword" 
+            size={24} 
+            className={gameState.status !== "playing" ? "text-gray-400" : "text-white"} 
           />
         </motion.button>
       </div>
@@ -392,9 +420,9 @@ level={level}
         )}
       </AnimatePresence>
 
-      {/* Instructions Overlay (for first few seconds) */}
+{/* Instructions Overlay (for first few seconds) */}
       <AnimatePresence>
-        {timer < 3 && gameState.status === "playing" && (
+        {timer < 5 && gameState.status === "playing" && (
           <motion.div
             className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center text-white z-20"
             initial={{ opacity: 0, y: 20 }}
@@ -403,7 +431,8 @@ level={level}
           >
             <div className="bg-black/50 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/20">
               <p className="font-medium mb-1">TAP or SPACE to Jump</p>
-              <p className="text-sm text-slate-300">Reach the glowing portal!</p>
+              <p className="text-sm text-slate-300 mb-1">Reach the glowing portal!</p>
+              <p className="text-xs text-yellow-300">⚔️ Fight traps to continue!</p>
             </div>
           </motion.div>
         )}
