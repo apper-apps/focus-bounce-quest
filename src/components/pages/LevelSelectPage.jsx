@@ -85,11 +85,11 @@ const LevelSelectPage = () => {
             <ApperIcon name="ArrowLeft" size={20} />
             Back to Menu
           </Button>
-<div className="text-center mb-8">
+<div className="text-center">
             <motion.div className="inline-block mb-4">
-            <h1 className="font-display text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Reverse Challenge
-            </h1>
+              <h1 className="font-display text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Reverse Challenge
+              </h1>
             </motion.div>
             <p className="text-slate-400 text-lg">Start from the hardest - work your way down!</p>
           </div>

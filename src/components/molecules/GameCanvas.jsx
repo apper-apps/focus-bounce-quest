@@ -103,7 +103,7 @@ if (gameState.sleepUsed || sleepActive || gameState.status !== "playing") return
   }, [controls, handleJump, handleSleep]);
 
   // Collision detection
-  const checkCollisions = useCallback((newX, newY) => {
+const checkCollisions = useCallback((newX, newY, currentVelocityY = 0) => {
     if (!level?.platforms) return { collision: false, type: null };
 
     // Check ground collision
@@ -130,11 +130,11 @@ if (gameState.sleepUsed || sleepActive || gameState.status !== "playing") return
         ballBottom > platformTop &&
         ballTop < platformBottom
       ) {
-if (platform.type === "obstacle" && !sleepActive) {
+        if (platform.type === "obstacle" && !sleepActive) {
           return { collision: true, type: "obstacle", platform };
         } else if (platform.type === "platform") {
           // Land on top of platform
-          if (ballState.velocityY > 0 && ballTop < platformTop) {
+          if (currentVelocityY > 0 && ballTop < platformTop) {
             return { 
               collision: true, 
               type: "platform", 
@@ -158,7 +158,7 @@ if (platform.type === "obstacle" && !sleepActive) {
     }
 
     return { collision: false, type: null };
-  }, [level, ballState.velocityY, sleepActive]);
+  }, [level, sleepActive]);
 
   // Game loop
   useEffect(() => {
@@ -166,28 +166,28 @@ if (platform.type === "obstacle" && !sleepActive) {
 
     gameLoopRef.current = setInterval(() => {
 setBallState(prev => {
-        let newX = prev.x;
-        let newY = prev.y;
-        let newVelocityX = prev.velocityX;
-        let newVelocityY = prev.velocityY;
-        let newIsGrounded = false;
-        let newLastGroundTime = prev.lastGroundTime;
+          let newX = prev.x;
+          let newY = prev.y;
+          let newVelocityX = prev.velocityX;
+          let newVelocityY = prev.velocityY;
+          let newIsGrounded = false;
+          let newLastGroundTime = prev.lastGroundTime;
 
-        // Don't move during sleep
-        if (!sleepActive) {
-          // Apply gravity
-          newVelocityY += GRAVITY;
-          
-          // Update position
-          newX += newVelocityX;
-          newY += newVelocityY;
+          // Don't move during sleep
+          if (!sleepActive) {
+            // Apply gravity
+            newVelocityY += GRAVITY;
+            
+            // Update position
+            newX += newVelocityX;
+            newY += newVelocityY;
 
-          // Check boundaries
-          if (newX < 0) newX = 0;
-          if (newX > dimensions.width - BALL_SIZE) newX = dimensions.width - BALL_SIZE;
+            // Check boundaries
+            if (newX < 0) newX = 0;
+            if (newX > dimensions.width - BALL_SIZE) newX = dimensions.width - BALL_SIZE;
 
-          // Check collisions
-          const collision = checkCollisions(newX, newY);
+            // Check collisions with current velocity
+            const collision = checkCollisions(newX, newY, newVelocityY);
           
           if (collision.collision) {
             switch (collision.type) {
@@ -241,7 +241,7 @@ setBallState(prev => {
         clearInterval(gameLoopRef.current);
       }
     };
-  }, [gameState.status, dimensions, checkCollisions, sleepActive, onLevelComplete, onGameOver]);
+}, [gameState.status, dimensions, sleepActive, onLevelComplete, onGameOver]);
 
 // Reset ball position when level changes or game restarts
   useEffect(() => {
