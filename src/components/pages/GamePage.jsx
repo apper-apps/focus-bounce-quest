@@ -177,8 +177,21 @@ const handleRestart = () => {
     setShowModal(false);
     // Game canvas will reset automatically
   };
-
-  const handleNextLevel = () => {
+const handleNextLevel = () => {
+    // Close modal first
+    setShowModal(false);
+    
+    // Reset game state for next level
+    setGameState({
+      status: "playing",
+      sleepUsed: false,
+      deaths: 0,
+      score: 0,
+      perfectJumps: 0,
+      timeBonus: 0,
+    });
+    
+    // Navigate to next level
     const nextLevel = parseInt(levelId) + 1;
     if (nextLevel <= 20) {
       navigate(`/game/${nextLevel}`);
