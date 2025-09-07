@@ -198,6 +198,7 @@ setBallState(prev => {
           let newVelocityY = prev.velocityY;
           let newIsGrounded = false;
           let newLastGroundTime = prev.lastGroundTime;
+          let newIsReversed = prev.isReversed;
 
           // Don't move during sleep
           if (!sleepActive) {
@@ -214,19 +215,13 @@ setBallState(prev => {
             // Check boundaries - reverse direction when hitting walls
             if (newX < 0) {
               newX = 0;
-              setBallState(current => ({
-                ...current,
-                isReversed: false,
-                velocityX: current.baseSpeed
-              }));
+              newIsReversed = false;
+              newVelocityX = prev.baseSpeed;
             }
             if (newX > dimensions.width - BALL_SIZE) {
               newX = dimensions.width - BALL_SIZE;
-              setBallState(current => ({
-                ...current,
-                isReversed: true,
-                velocityX: -current.baseSpeed
-              }));
+              newIsReversed = true;
+              newVelocityX = -prev.baseSpeed;
             }
 
             // Check collisions with current velocity
@@ -268,13 +263,15 @@ setBallState(prev => {
           }
         }
 
-        return {
+return {
           ...prev,
           x: newX,
           y: newY,
           velocityX: newVelocityX,
           velocityY: newVelocityY,
           isGrounded: newIsGrounded,
+          isReversed: newIsReversed,
+          lastGroundTime: newLastGroundTime,
         };
       });
     }, 16); // ~60 FPS
