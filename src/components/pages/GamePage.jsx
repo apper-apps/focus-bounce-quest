@@ -239,13 +239,19 @@ const handleNextLevel = () => {
 
 {/* Game Canvas */}
       <GameCanvas
-        level={level}
+level={level}
         gameState={gameState}
         onLevelComplete={handleLevelComplete}
         onGameOver={handleGameOver}
         onSleepUsed={() => setGameState(prev => ({ ...prev, sleepUsed: true }))}
         onJump={handleJump}
-        onScore={(points) => setGameState(prev => ({ ...prev, score: prev.score + points }))}
+        onScore={(points, ballReversed) => {
+          setGameState(prev => ({ 
+            ...prev, 
+            score: prev.score + points,
+            ballReversed: ballReversed !== undefined ? ballReversed : prev.ballReversed
+          }));
+        }}
         controls={controlsRef.current}
         key={`${level?.id}-${startTime}`}
       />

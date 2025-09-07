@@ -11,7 +11,8 @@ const GameHUD = ({
   onSleep, 
   sleepUsed,
   deaths = 0,
-  score = 0 
+  score = 0,
+  ballReversed = false
 }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -87,9 +88,9 @@ const GameHUD = ({
               <ApperIcon name="Moon" size={12} />
               <span>S for sleep ability</span>
             </div>
-            <div className="flex items-center gap-2">
+<div className="flex items-center gap-2">
               <ApperIcon name="RotateCcw" size={12} />
-              <span>R to reverse direction</span>
+              <span>R to go {ballReversed ? 'right' : 'left'}</span>
             </div>
           </div>
         </div>

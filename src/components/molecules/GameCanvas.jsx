@@ -405,6 +405,9 @@ background: `linear-gradient(135deg,
         isReversed={ballState.isReversed}
         size={BALL_SIZE}
       />
+      
+      {/* Update parent with ball state */}
+      {onScore && setTimeout(() => onScore(0, ballState.isReversed), 0)}
 {/* Particle System */}
       {particles.map((particle) => (
         <motion.div
