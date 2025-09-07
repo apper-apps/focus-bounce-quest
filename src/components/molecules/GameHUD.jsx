@@ -9,7 +9,9 @@ const GameHUD = ({
   canSleep, 
   onPause, 
   onSleep, 
-  sleepUsed 
+  sleepUsed,
+  deaths = 0,
+  score = 0 
 }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -18,20 +20,32 @@ const GameHUD = ({
   };
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-10 p-4">
-      <div className="flex justify-between items-center">
-        {/* Level Info */}
-        <div className="bg-black/30 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-          <span className="text-white font-display text-lg">LEVEL {level}</span>
+<div className="absolute top-0 left-0 right-0 z-10 p-4">
+      <div className="flex justify-between items-start">
+        {/* Left Side - Level & Stats */}
+        <div className="flex flex-col gap-2">
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
+            <span className="text-white font-display text-lg">LEVEL {level}</span>
+          </div>
+          {(deaths > 0 || score > 0) && (
+            <div className="bg-black/40 backdrop-blur-sm rounded-xl px-3 py-1 border border-white/20 text-sm">
+              {score > 0 && <span className="text-yellow-400">Score: {score}</span>}
+              {deaths > 0 && score > 0 && <span className="text-white mx-2">•</span>}
+              {deaths > 0 && <span className="text-red-400">Deaths: {deaths}</span>}
+            </div>
+          )}
         </div>
 
-        {/* Timer */}
-        <div className="bg-black/30 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-          <span className="text-white font-mono text-lg">{formatTime(timer)}</span>
+        {/* Center - Timer */}
+        <div className="bg-black/40 backdrop-blur-sm rounded-xl px-6 py-3 border border-white/20">
+          <div className="text-center">
+            <div className="text-white font-mono text-2xl font-bold">{formatTime(timer)}</div>
+            <div className="text-slate-300 text-xs uppercase tracking-wide">Time</div>
+          </div>
         </div>
-
-        {/* Controls */}
-        <div className="flex items-center gap-3">
+{/* Right Side - Controls */}
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-3">
           {/* Sleep Button */}
           <motion.button
             onClick={onSleep}
@@ -58,7 +72,20 @@ const GameHUD = ({
             className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/20"
           >
             <ApperIcon name="Pause" size={20} />
-          </Button>
+</Button>
+          </div>
+          
+          {/* Help Text */}
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/20 text-xs text-slate-300 max-w-48">
+            <div className="flex items-center gap-2 mb-1">
+              <ApperIcon name="MousePointer" size={12} />
+              <span>Click/SPACE to jump</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ApperIcon name="Moon" size={12} />
+              <span>S for sleep ability</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

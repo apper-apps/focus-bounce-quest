@@ -22,9 +22,12 @@ const LevelCard = ({ level, progress, onClick, locked = false }) => {
     >
       {/* Level Number */}
       <div className="text-center mb-3">
-        <h3 className={`font-display text-2xl ${locked ? "text-gray-400" : "text-white"}`}>
-          {level.id}
+<h3 className={`font-display text-2xl ${locked ? "text-gray-400" : "text-white"}`}>
+          {level.Id}
         </h3>
+        <p className={`text-xs mt-1 ${locked ? "text-gray-500" : "text-slate-400"}`}>
+          {level.name}
+        </p>
       </div>
 
       {/* Stars */}

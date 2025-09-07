@@ -28,9 +28,10 @@ const GameCanvas = ({
     velocityX: 2,
     velocityY: 0,
     isGrounded: false,
-    isJumping: false,
+isJumping: false,
+    lastGroundTime: Date.now(),
   });
-
+  const [particles, setParticles] = useState([]);
   const [sleepActive, setSleepActive] = useState(false);
 
   // Update canvas dimensions
@@ -49,7 +50,9 @@ const GameCanvas = ({
 
   // Handle jump input
   const handleJump = useCallback(() => {
-    if (sleepActive || !ballState.isGrounded) return;
+// Allow coyote time jumping (can jump shortly after leaving ground)
+    const canJump = ballState.isGrounded || (Date.now() - ballState.lastGroundTime < 150);
+    if (sleepActive || !canJump) return;
     
     setBallState(prev => ({
       ...prev,
@@ -68,16 +71,27 @@ const GameCanvas = ({
 
   // Handle sleep input
   const handleSleep = useCallback(() => {
-    if (gameState.sleepUsed || sleepActive) return;
+if (gameState.sleepUsed || sleepActive || gameState.status !== "playing") return;
 
     setSleepActive(true);
     onSleepUsed?.();
+
+    // Create sleep particles
+    const sleepParticles = Array.from({ length: 8 }, (_, i) => ({
+      id: Date.now() + i,
+      x: ballState.x + Math.random() * 40,
+      y: ballState.y + Math.random() * 40,
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * -2,
+      life: 1,
+    }));
+    setParticles(prev => [...prev, ...sleepParticles]);
 
     // Sleep lasts 2 seconds
     setTimeout(() => {
       setSleepActive(false);
     }, 2000);
-  }, [gameState.sleepUsed, sleepActive, onSleepUsed]);
+  }, [gameState.sleepUsed, sleepActive, onSleepUsed, gameState.status, ballState.x, ballState.y]);
 
   // Set up controls
   useEffect(() => {
@@ -115,8 +129,8 @@ const GameCanvas = ({
         ballBottom > platformTop &&
         ballTop < platformBottom
       ) {
-        if (platform.type === "obstacle" && !sleepActive) {
-          return { collision: true, type: "obstacle" };
+if (platform.type === "obstacle" && !sleepActive) {
+          return { collision: true, type: "obstacle", platform };
         } else if (platform.type === "platform") {
           // Land on top of platform
           if (ballState.velocityY > 0 && ballTop < platformTop) {
@@ -180,8 +194,19 @@ const GameCanvas = ({
                 newY = collision.y;
                 newVelocityY = 0;
                 newIsGrounded = true;
-                break;
+break;
               case "obstacle":
+                // Create explosion particles
+                const explosionParticles = Array.from({ length: 12 }, (_, i) => ({
+                  id: Date.now() + i,
+                  x: prev.x + 20,
+                  y: prev.y + 20,
+                  vx: (Math.random() - 0.5) * 8,
+                  vy: (Math.random() - 0.5) * 8,
+                  life: 1,
+                  color: '#FF6B6B'
+                }));
+                setParticles(prevParticles => [...prevParticles, ...explosionParticles]);
                 onGameOver?.();
                 return prev;
               case "portal":
@@ -215,17 +240,19 @@ const GameCanvas = ({
     };
   }, [gameState.status, dimensions, checkCollisions, sleepActive, onLevelComplete, onGameOver]);
 
-  // Reset ball position when level changes
+// Reset ball position when level changes
   useEffect(() => {
     setBallState({
       x: 50,
       y: GROUND_Y - BALL_SIZE,
-      velocityX: 2,
+      velocityX: 2.5, // Slightly faster movement
       velocityY: 0,
       isGrounded: true,
       isJumping: false,
+      lastGroundTime: Date.now(),
     });
     setSleepActive(false);
+    setParticles([]);
   }, [level?.id]);
 
   if (!level) return null;
@@ -314,19 +341,58 @@ const GameCanvas = ({
         isJumping={ballState.isJumping}
         size={BALL_SIZE}
       />
+{/* Particle System */}
+      {particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          className="absolute w-1 h-1 rounded-full pointer-events-none"
+          style={{
+            left: particle.x,
+            top: particle.y,
+            backgroundColor: particle.color || '#9333ea',
+          }}
+          initial={{ opacity: 1, scale: 1 }}
+          animate={{ 
+            opacity: 0, 
+            scale: 0,
+            x: particle.vx * 20,
+            y: particle.vy * 20,
+          }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          onAnimationComplete={() => {
+            setParticles(prev => prev.filter(p => p.id !== particle.id));
+          }}
+        />
+      ))}
 
       {/* Sleep Effect Overlay */}
       <AnimatePresence>
         {sleepActive && (
           <motion.div
-            className="absolute inset-0 bg-purple-500/10 backdrop-blur-sm"
+            className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 pointer-events-none sleep-effect"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-          />
+          >
+            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Game Status Overlay */}
+      {gameState.status === "paused" && (
+        <motion.div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="text-center text-white">
+            <h2 className="text-4xl font-bold mb-4">PAUSED</h2>
+            <p className="text-lg opacity-80">Press ESC or click pause to resume</p>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };

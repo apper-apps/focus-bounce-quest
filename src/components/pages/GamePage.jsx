@@ -22,11 +22,13 @@ const GamePage = () => {
   const [startTime] = useState(Date.now());
   const [timer, setTimer] = useState(0);
 
-  const [gameState, setGameState] = useState({
+const [gameState, setGameState] = useState({
     status: "playing", // playing, paused, completed, failed
     sleepUsed: false,
     deaths: 0,
     score: 0,
+    perfectJumps: 0,
+    timeBonus: 0,
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -52,11 +54,11 @@ const GamePage = () => {
 
   // Game timer
   useEffect(() => {
-    let interval;
-    if (gameState.status === "playing") {
+let interval;
+    if (gameState.status === "playing" && startTime) {
       interval = setInterval(() => {
         setTimer(Math.floor((Date.now() - startTime) / 1000));
-      }, 1000);
+      }, 100); // More frequent updates for smoother timer
     }
     return () => clearInterval(interval);
   }, [gameState.status, startTime]);
@@ -107,11 +109,13 @@ const GamePage = () => {
     setShowModal(false);
   };
 
-  const handleSleep = () => {
-    if (!gameState.sleepUsed) {
+const handleSleep = () => {
+    if (!gameState.sleepUsed && gameState.status === "playing") {
       setGameState(prev => ({ ...prev, sleepUsed: true }));
       controlsRef.current.sleep?.();
-      toast.info("💤 Sleep activated! Temporary invulnerability");
+      toast.info("💤 Sleep activated! 2 seconds of invulnerability", {
+        icon: "🛡️"
+      });
     }
   };
 
@@ -140,11 +144,14 @@ const GamePage = () => {
   };
 
   const handleGameOver = () => {
-    setGameState(prev => ({ 
+setGameState(prev => ({ 
       ...prev, 
       status: "failed", 
       deaths: prev.deaths + 1 
     }));
+    toast.error("💥 Game Over! Try again", {
+      icon: "💀"
+    });
     setModalType("failed");
     setShowModal(true);
     toast.error("💥 Game Over! Try again!");
@@ -158,12 +165,14 @@ const GamePage = () => {
     return 1;
   };
 
-  const handleRestart = () => {
+const handleRestart = () => {
     setGameState({
       status: "playing",
       sleepUsed: false,
       deaths: 0,
       score: 0,
+      perfectJumps: 0,
+      timeBonus: 0,
     });
     setShowModal(false);
     // Game canvas will reset automatically
@@ -207,13 +216,15 @@ const GamePage = () => {
   }
 
   return (
-    <div className="h-full w-full relative overflow-hidden">
+<div className="h-full w-full relative overflow-hidden bg-gradient-to-b from-slate-900 to-slate-800">
       {/* Game HUD */}
       <GameHUD
         level={parseInt(levelId)}
         timer={timer}
         canSleep={!gameState.sleepUsed}
         sleepUsed={gameState.sleepUsed}
+        deaths={gameState.deaths}
+        score={gameState.score}
         onPause={handlePause}
         onSleep={handleSleep}
       />
@@ -226,6 +237,7 @@ const GamePage = () => {
         onGameOver={handleGameOver}
         onSleepUsed={() => setGameState(prev => ({ ...prev, sleepUsed: true }))}
         onJump={handleJump}
+        onScore={(points) => setGameState(prev => ({ ...prev, score: prev.score + points }))}
         controls={controlsRef.current}
       />
 
