@@ -165,12 +165,13 @@ if (platform.type === "obstacle" && !sleepActive) {
     if (gameState.status !== "playing") return;
 
     gameLoopRef.current = setInterval(() => {
-      setBallState(prev => {
+setBallState(prev => {
         let newX = prev.x;
         let newY = prev.y;
         let newVelocityX = prev.velocityX;
         let newVelocityY = prev.velocityY;
         let newIsGrounded = false;
+        let newLastGroundTime = prev.lastGroundTime;
 
         // Don't move during sleep
         if (!sleepActive) {
@@ -195,7 +196,8 @@ if (platform.type === "obstacle" && !sleepActive) {
                 newY = collision.y;
                 newVelocityY = 0;
                 newIsGrounded = true;
-break;
+                newLastGroundTime = Date.now(); // Update ground time for reliable coyote jumping
+                break;
               case "obstacle":
                 // Create explosion particles
                 const explosionParticles = Array.from({ length: 12 }, (_, i) => ({
